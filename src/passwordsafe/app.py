@@ -2,7 +2,9 @@ import toga
 from toga import Button, Box
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
-
+import sqlite3
+import os
+from .database import save_password_to_db, create_table
 from .generator import password_generator
 
 
@@ -11,6 +13,12 @@ class MyApp(toga.App):
 
     def startup(self):
 
+        database_path = os.path.join(self.paths.app, "password_safe.db")
+        
+        # Підключаємося до бази даних у внутрішньому сховищі
+        self.conn = sqlite3.connect(database_path)
+        create_table(self.conn)
+        
         self.password_visible = False
         
         self.label = toga.Label(text="Safe your password!", style=Pack(flex=0, text_align="center", color="black",
@@ -42,12 +50,12 @@ class MyApp(toga.App):
             style=Pack(height=40, padding=(5, 5), background_color="transparent")
         )
         
-        self.button = Button(text="SAVE", on_press=self.say_hello,
+        self.button = Button(text="SAVE", on_press=self.on_save_password_click,
                         style=Pack(flex=1, text_align="center", padding=5,
                         background_color="#1A998D", color="black"))
         
         self.button_2 = Button(text="PASS", style=Pack(flex=1, text_align="center", padding=5,
-                                                               background_color="#FEFFFE", color="black"))
+                                                               background_color="#1A998D", color="black"))
         
         self.password_input_box = toga.Box(style=Pack(direction=ROW, background_color="#FEFFFE"),
                                            children=[self.password_input, self.toggle_password_visibility_button])
@@ -69,6 +77,24 @@ class MyApp(toga.App):
         self.main_window = toga.MainWindow(title='Password Safe')
         self.main_window.content = self.main_box
         self.main_window.show()
+        
+        
+    async def on_save_password_click(self, widget):
+        """Обробка події при натисканні на кнопку SAVE"""
+        url = self.name_input.value
+        password = self.password_input.value
+        ask_a_question = toga.QuestionDialog(title="SAVE DATA?", 
+                        message="Дані вірно вказані?\n"f"Name: {self.name_input.value}\nPassword: {self.password_input.value}")
+        
+        
+        if await self.main_window.dialog(ask_a_question):
+            if save_password_to_db(self.conn, url, password):
+                save = toga.InfoDialog("Success", "Password saved successfully")
+                await self.main_window.dialog(save)
+            else:
+                error = toga.InfoDialog("Error", "Please enter both URL and password")
+                await self.main_window.dialog(error)
+        
 
     def generate_password_handler(self, widget):
 
@@ -92,7 +118,7 @@ class MyApp(toga.App):
         
         # Додаємо нове поле замість старого
         self.password_input_box.insert(0, self.password_input)
-        # self.main_box.children[0].insert(4, self.password_input)
+ 
         # Перемикаємо стан
         self.password_visible = not self.password_visible
 
@@ -100,18 +126,6 @@ class MyApp(toga.App):
 
 
 
-
-
-
-
-    async def say_hello(self, widget):
-        ask_a_question = toga.QuestionDialog("Sing Up?", "Дані вірно вказані?")
-        say = toga.InfoDialog(title="Your credentials",
-                                 message=f"Name: {self.name_input.value}\nPassword: {self.password_input.value}"
-        )
-        if await self.main_window.dialog(ask_a_question):
-            
-            await self.main_window.dialog(say)
 
 def main():
     return MyApp()
