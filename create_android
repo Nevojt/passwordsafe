@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "briefcase create android"
+
+briefcase create android -y
+
+echo "briefcase build android"
+
+briefcase build android
+
+echo "briefcase run android"
+
+briefcase run android
