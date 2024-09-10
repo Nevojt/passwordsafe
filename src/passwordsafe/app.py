@@ -4,7 +4,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 import sqlite3
 import os
-from .database import save_password_to_db, create_table
+from .database import save_password_to_db, create_table, get_all_passwords
 from .generator import password_generator
 
 
@@ -54,7 +54,8 @@ class MyApp(toga.App):
                         style=Pack(flex=1, text_align="center", padding=5,
                         background_color="#1A998D", color="black"))
         
-        self.button_2 = Button(text="PASS", style=Pack(flex=1, text_align="center", padding=5,
+        self.button_2 = Button(text="PASS", on_press=self.show_saved_passwords,
+                               style=Pack(flex=1, text_align="center", padding=5,
                                                                background_color="#1A998D", color="black"))
         
         self.password_input_box = toga.Box(style=Pack(direction=ROW, background_color="#FEFFFE"),
@@ -68,12 +69,16 @@ class MyApp(toga.App):
                                   self.password_input_box,
                                   self.generate_password
                                   ])
-        
+        # Контейнер для таблиці з паролями, спочатку порожній
+        self.table_box = Box(style=Pack(direction=COLUMN, padding=10))
         self.bottom =    Box(style=Pack(direction=ROW, flex=0), children=[self.button, self.button_2])
         
         self.main_box =  Box(style=Pack(direction=COLUMN, background_color="#FEFFFE"),  
-                            children=[self.top, self.bottom])
+                            children=[self.top, self.table_box, self.bottom])
 
+
+
+        
         self.main_window = toga.MainWindow(title='Password Safe')
         self.main_window.content = self.main_box
         self.main_window.show()
@@ -122,7 +127,23 @@ class MyApp(toga.App):
         # Перемикаємо стан
         self.password_visible = not self.password_visible
 
+    def show_saved_passwords(self, widget):
+        """Відображення збережених паролів у таблиці в основному вікні"""
+        passwords = get_all_passwords(self.conn)
 
+        # Видаляємо попередню таблицю, якщо вона існує
+        self.table_box.clear()
+
+        if passwords:
+            # Створюємо таблицю з колонками для URL та паролів
+            table = toga.Table(headings=['URL', 'Password'], data=passwords, style=Pack(flex=1))
+
+            # Додаємо таблицю в контейнер
+            self.table_box.add(table)
+        else:
+            # Якщо паролі відсутні
+            empty_label = toga.Label("No saved passwords", style=Pack(padding=(10, 0)))
+            self.table_box.add(empty_label)
 
 
 

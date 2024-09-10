@@ -27,3 +27,10 @@ def save_password_to_db(conn, url, password):
         return True
     else:
         return False
+    
+def get_all_passwords(conn):
+    """Отримати всі паролі з бази даних"""
+    cursor = conn.cursor()
+    cursor.execute('SELECT url, password FROM passwords')
+    return cursor.fetchall()
+

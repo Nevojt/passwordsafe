@@ -8,9 +8,9 @@ def password_generator():
     numbers = list(string.digits)
 
 
-    random_letters = random.choices(letters, k=4)
-    random_symbols = random.choices(symbols, k=4)
-    random_numbers = random.choices(numbers, k=4)
+    random_letters = random.choices(letters, k=6)
+    random_symbols = random.choices(symbols, k=6)
+    random_numbers = random.choices(numbers, k=6)
 
 
     list_password = random_letters + random_numbers + random_symbols
